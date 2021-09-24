@@ -58,15 +58,23 @@ inquirer
             when: (answers) => answers.actions === 'Add an employee'
         },
         {
-            type: 'input',
+            type: 'list',
             message: "Enter the name of the employee you want to update:",
             name: 'roleUpdateName',
+            choices: async () => {
+                const employees = await db.promise().query('SELECT first_name, last_name FROM employee')
+                return employees[0].map(employee => employee.first_name)
+            },
             when: (answers) => answers.actions === 'Update an employee role'
         },
         {
-            type: 'input',
+            type: 'list',
             message: "Enter the role you want to promote the employee to:",
             name: 'roleUpdate',
+            choices: async () => {
+                const employees = await db.promise().query('SELECT title FROM roles')
+                return employees[0].map(employee => employee.title)
+            },
             when: (answers) => answers.actions === 'Update an employee role'
         },
     ])
@@ -86,11 +94,10 @@ inquirer
     if (answers.department) {
         addDepartment(answers.department);
     } else if (answers.roleUpdateName) {
-        updateEmployee(answers.roleUpdateName, answers.roleUpdate)
+        updateEmployee(answers.roleUpdate, answers.roleUpdateName)
+    } else if (answers.roleName) {
+        addRole(answers.roleName, answers.salary, answers.roleDept)
+    } else if (answers.firstName) {
+        addEmployees(answers.firstName, answers.lastName, answers.employeeRole, answers.employeeManager)
     }
-    // } else if (answers.roleName) {
-    //     addRole(answers.roleName, answers.salary, answers.roleDept);
-    // } else if (answers.firstName) {
-    //     addEmployees(answers.firstName, answers.lastName, answers.employeeRole, answers.employeeManager)
-    // }
 })

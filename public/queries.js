@@ -42,60 +42,31 @@ const addDepartment = (department) => {
 }
 
 const addRole = (name, salary, dept) => {
-    db.query(`INSERT INTO roles (title, salary, department_id) VALUES ("${name}", "${salary}", "${dept}")`, function (err, results) {
+    db.query(`INSERT INTO roles (title, salary, department_id)
+    SELECT "${name}", "${salary}", id
+    FROM department WHERE name = "${dept}"`, function (err, results) {
         if (err) throw err
         console.log('Role successfully added!')
       });
 }
 
-const addEmployees = (firstName, lastName, roleID, managerID) => {
-    db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", "${roleID}", "${managerID}")`, function (err, results) {
+const addEmployees = (firstName, lastName, roleName, managerName) => {
+    let manager = managerName.split(' ')
+    db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
+    SELECT "${firstName}", "${lastName}", roles.id, employee.id
+    FROM roles, employee WHERE title = "${roleName}" AND first_name = "${manager[0]}"`, function (err, results) {
         if (err) throw err
         console.log('Employee successfully added!')
       });
 }
 
-const updateEmployee = (roleName, employee) => {
-    console.log(roleName)
-    console.log(employee)
-    db.query(`UPDATE employee SET role = "${roleName}" WHERE first_name = ${employee[0]} AND last_name = ${employee[1]}`, function (err, results) {
-      if (err) throw err
-      console.log('Employee role successfully updated!')
-    });
+const updateEmployee = async (roleName, employee) => {
+    const employer = employee.split(' ')
+    const role = await db.promise().query(`SELECT id FROM roles WHERE title = "${roleName}"`)
+    const query = await db.promise().query(`UPDATE employee SET role_id = ${role[0][0].id} WHERE first_name = "${employer[0]}"`)
+    console.log('Employee successfully updated!')
 }
 
-// const test = () => {
-//   var choices = [];
-//   db.query("SELECT name FROM department", function (err, results) {
-//     if (err) throw err
-//       results.forEach(element => {
-//       var {name: a} = element
-//       choices.push(a)
-//     })
-//   });
-// }
 
-function test2 () {
-  var choices = [];
-  var result;
-    db.query("SELECT name FROM department", function (err, results) {
-      if (err) throw err
-      results.forEach(element => {
-      var {name: a} = element
-      choices.push(a)
-    })
-    console.log(choices)
-    return result = choices
-  });
-  return result
-}
-
-test2();
-
-// prompt user for dept name
-// list of existing depts shown in prompt listing
-// enter dept name/select from list of existing depts
-// match selected list choice to dept_id
-// input retrieved dept_id to database :>
 
 module.exports = {viewDepartments, viewRoles, viewEmployees, addDepartment, addRole, addEmployees, updateEmployee, db}
